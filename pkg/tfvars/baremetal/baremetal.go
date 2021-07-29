@@ -67,6 +67,28 @@ func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, 
 		driverInfo["deploy_kernel"] = fmt.Sprintf("http://%s/images/ironic-python-agent.kernel", net.JoinHostPort(imageCacheIP, "80"))
 		driverInfo["deploy_ramdisk"] = fmt.Sprintf("http://%s/images/ironic-python-agent.initramfs", net.JoinHostPort(imageCacheIP, "80"))
 
+		// raidConfig := make(map[string]interface{}, 0)
+		// if host.RAID == nil {
+		// 	raidConfig = nil
+		// } else {
+		// 	if len(host.RAID.HardwareRAIDVolumes) != 0 {
+		// 		raidConfig["HardwareRAIDVolumes"] = host.RAID.HardwareRAIDVolumes
+		// 	}
+		// 	if len(host.RAID.SoftwareRAIDVolumes) != 0 {
+		// 		raidConfig["SoftwareRAIDVolumes"] = host.RAID.SoftwareRAIDVolumes
+		// 	}
+		// }
+
+		raidConfig, err := json.Marshal(host.RAID)
+		if err != nil {
+			return nil, err
+		}
+
+		biosSettings, _ := json.Marshal(host.Firmware)
+		if err != nil {
+			return nil, err
+		}
+
 		// Host Details
 		hostMap := map[string]interface{}{
 			"name":                 host.Name,
@@ -77,6 +99,9 @@ func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, 
 			"power_interface":      accessDetails.PowerInterface(),
 			"raid_interface":       accessDetails.RAIDInterface(),
 			"vendor_interface":     accessDetails.VendorInterface(),
+			"raid_config":          raidConfig,
+			"bios_settings":        biosSettings,
+			// "bios_settings":        accessDetails.BuildBIOSSettings(host.Firmware),
 		}
 
 		// Explicitly set the boot mode to the default "uefi" in case

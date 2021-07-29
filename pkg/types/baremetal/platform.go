@@ -1,6 +1,7 @@
 package baremetal
 
 import (
+	baremetalhost "github.com/metal3-io/baremetal-operator/apis/metal3.io/v1alpha1"
 	"github.com/openshift/installer/pkg/ipnet"
 )
 
@@ -27,13 +28,15 @@ const (
 
 // Host stores all the configuration data for a baremetal host.
 type Host struct {
-	Name            string           `json:"name,omitempty" validate:"required,uniqueField"`
-	BMC             BMC              `json:"bmc"`
-	Role            string           `json:"role"`
-	BootMACAddress  string           `json:"bootMACAddress" validate:"required,uniqueField"`
-	HardwareProfile string           `json:"hardwareProfile"`
-	RootDeviceHints *RootDeviceHints `json:"rootDeviceHints,omitempty"`
-	BootMode        BootMode         `json:"bootMode,omitempty"`
+	Name            string                        `json:"name,omitempty" validate:"required,uniqueField"`
+	BMC             BMC                           `json:"bmc"`
+	Role            string                        `json:"role"`
+	BootMACAddress  string                        `json:"bootMACAddress" validate:"required,uniqueField"`
+	HardwareProfile string                        `json:"hardwareProfile"`
+	RootDeviceHints *RootDeviceHints              `json:"rootDeviceHints,omitempty"`
+	BootMode        BootMode                      `json:"bootMode,omitempty"`
+	RAID            *baremetalhost.RAIDConfig     `json:"raid,omitempty"`
+	Firmware        *baremetalhost.FirmwareConfig `json:"firmware,omitempty"`
 }
 
 // ProvisioningNetwork determines how we will use the provisioning network.
