@@ -276,7 +276,9 @@ type SoftwareRAIDVolume struct {
 // RAIDConfig contains the configuration that are required to config RAID in Bare Metal server
 type RAIDConfig struct {
 	// The list of logical disks for hardware RAID, if rootDeviceHints isn't used, first volume is root volume.
-	HardwareRAIDVolumes []HardwareRAIDVolume `json:"hardwareRAIDVolumes,omitempty"`
+	// You can set the value of this field to `[]` to clear all the hardware RAID configurations.
+	// +optional
+	HardwareRAIDVolumes []HardwareRAIDVolume `json:"hardwareRAIDVolumes"`
 
 	// The list of logical disks for software RAID, if rootDeviceHints isn't used, first volume is root volume.
 	// If HardwareRAIDVolumes is set this item will be invalid.
@@ -285,8 +287,10 @@ type RAIDConfig struct {
 	// If there are two, the first one has to be a RAID-1, while the RAID level for the second one can be 0, 1, or 1+0.
 	// As the first RAID device will be the deployment device,
 	// enforcing a RAID-1 reduces the risk of ending up with a non-booting node in case of a disk failure.
+	// Software RAID will always be deleted.
 	// +kubebuilder:validation:MaxItems=2
-	SoftwareRAIDVolumes []SoftwareRAIDVolume `json:"softwareRAIDVolumes,omitempty"`
+	// +optional
+	SoftwareRAIDVolumes []SoftwareRAIDVolume `json:"softwareRAIDVolumes"`
 }
 
 // FirmwareConfig contains the configuration that you want to configure BIOS settings in Bare metal server
@@ -385,6 +389,10 @@ type BareMetalHostSpec struct {
 	// +kubebuilder:default:=metadata
 	// +kubebuilder:validation:Optional
 	AutomatedCleaningMode AutomatedCleaningMode `json:"automatedCleaningMode,omitempty"`
+
+	// A custom deploy procedure.
+	// +optional
+	CustomDeploy *CustomDeploy `json:"customDeploy,omitempty"`
 }
 
 // AutomatedCleaningMode is the interface to enable/disable automated cleaning
@@ -432,6 +440,14 @@ type Image struct {
 	// are not required and if specified will be ignored.
 	// +kubebuilder:validation:Enum=raw;qcow2;vdi;vmdk;live-iso
 	DiskFormat *string `json:"format,omitempty"`
+}
+
+// Custom deploy is a description of a customized deploy process.
+type CustomDeploy struct {
+	// Custom deploy method name.
+	// This name is specific to the deploy ramdisk used. If you don't have
+	// a custom deploy ramdisk, you shouldn't use CustomDeploy.
+	Method string `json:"method"`
 }
 
 // FIXME(dhellmann): We probably want some other module to own these
@@ -740,6 +756,9 @@ type ProvisionStatus struct {
 
 	// The Bios set by the user
 	Firmware *FirmwareConfig `json:"firmware,omitempty"`
+
+	// Custom deploy procedure applied to the host.
+	CustomDeploy *CustomDeploy `json:"customDeploy,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -869,6 +888,11 @@ func (host *BareMetalHost) NeedsProvisioning() bool {
 		// The host is not supposed to be powered on.
 		return false
 	}
+
+	return host.hasNewImage() || host.hasNewCustomDeploy()
+}
+
+func (host *BareMetalHost) hasNewImage() bool {
 	if host.Spec.Image == nil {
 		// Without an image, there is nothing to provision.
 		return false
@@ -879,6 +903,22 @@ func (host *BareMetalHost) NeedsProvisioning() bool {
 	}
 	if host.Status.Provisioning.Image.URL == "" {
 		// We have an image set, but not provisioned.
+		return true
+	}
+	return false
+}
+
+func (host *BareMetalHost) hasNewCustomDeploy() bool {
+	if host.Spec.CustomDeploy == nil {
+		return false
+	}
+	if host.Spec.CustomDeploy.Method == "" {
+		return false
+	}
+	if host.Status.Provisioning.CustomDeploy == nil {
+		return true
+	}
+	if host.Status.Provisioning.CustomDeploy.Method != host.Spec.CustomDeploy.Method {
 		return true
 	}
 	return false
