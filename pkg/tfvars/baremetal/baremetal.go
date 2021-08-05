@@ -9,11 +9,15 @@ import (
 	"path"
 	"strings"
 
+	baremetalhost "github.com/metal3-io/baremetal-operator/apis/metal3.io/v1alpha1"
 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
 	"github.com/metal3-io/baremetal-operator/pkg/hardware"
+	"github.com/mitchellh/mapstructure"
+	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/tfvars/internal/cache"
 	"github.com/openshift/installer/pkg/types/baremetal"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 type config struct {
@@ -35,7 +39,7 @@ type config struct {
 }
 
 // TFVars generates bare metal specific Terraform variables.
-func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, externalMAC, provisioningBridge, provisioningMAC string, platformHosts []*baremetal.Host, image, ironicUsername, ironicPassword, ignition string) ([]byte, error) {
+func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, externalMAC, provisioningBridge, provisioningMAC string, platformHosts []*baremetal.Host, hostFiles []*asset.File, image, ironicUsername, ironicPassword, ignition string) ([]byte, error) {
 	bootstrapOSImage, err := cache.DownloadImageFile(bootstrapOSImage)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to use cached bootstrap libvirt image")
@@ -43,7 +47,7 @@ func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, 
 
 	var hosts, rootDevices, properties, driverInfos, instanceInfos []map[string]interface{}
 
-	for _, host := range platformHosts {
+	for i, host := range platformHosts {
 		// Get hardware profile
 		if host.HardwareProfile == "default" {
 			host.HardwareProfile = hardware.DefaultProfileName
@@ -67,26 +71,41 @@ func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, 
 		driverInfo["deploy_kernel"] = fmt.Sprintf("http://%s/images/ironic-python-agent.kernel", net.JoinHostPort(imageCacheIP, "80"))
 		driverInfo["deploy_ramdisk"] = fmt.Sprintf("http://%s/images/ironic-python-agent.initramfs", net.JoinHostPort(imageCacheIP, "80"))
 
-		// raidConfig := make(map[string]interface{}, 0)
-		// if host.RAID == nil {
-		// 	raidConfig = nil
-		// } else {
-		// 	if len(host.RAID.HardwareRAIDVolumes) != 0 {
-		// 		raidConfig["HardwareRAIDVolumes"] = host.RAID.HardwareRAIDVolumes
-		// 	}
-		// 	if len(host.RAID.SoftwareRAIDVolumes) != 0 {
-		// 		raidConfig["SoftwareRAIDVolumes"] = host.RAID.SoftwareRAIDVolumes
-		// 	}
-		// }
+		var hostFile *asset.File
+		var raid *baremetalhost.RAIDConfig
+		var firmware *baremetalhost.FirmwareConfig
+		var raidConfig, biosSettings []byte
 
-		raidConfig, err := json.Marshal(host.RAID)
-		if err != nil {
-			return nil, err
-		}
+		if host.Role == "master" {
+			hostFile = hostFiles[i]
+			hostFileMap := make(map[string]interface{})
+			err = yaml.Unmarshal(hostFile.Data, &hostFileMap)
+			if err != nil {
+				return nil, err
+			}
+			for key, value := range hostFileMap {
+				if key == "spec" {
+					for specKey, specValue := range value.(map[interface{}]interface{}) {
+						if specKey.(string) == "raid" {
+							mapstructure.Decode(specValue, &raid)
+							raidConfig, err = json.Marshal(raid)
+							if err != nil {
+								return nil, err
+							}
+							fmt.Printf("raid: %s\n", string(raidConfig))
+						}
 
-		biosSettings, _ := json.Marshal(host.Firmware)
-		if err != nil {
-			return nil, err
+						if specKey.(string) == "firmware" {
+							mapstructure.Decode(specValue, &firmware)
+							biosSettings, err = json.Marshal(firmware)
+							if err != nil {
+								return nil, err
+							}
+							fmt.Printf("bios: %s\n", string(biosSettings))
+						}
+					}
+				}
+			}
 		}
 
 		// Host Details
@@ -99,8 +118,8 @@ func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, 
 			"power_interface":      accessDetails.PowerInterface(),
 			"raid_interface":       accessDetails.RAIDInterface(),
 			"vendor_interface":     accessDetails.VendorInterface(),
-			"raid_config":          raidConfig,
-			"bios_settings":        biosSettings,
+			"raid_config":          string(raidConfig),
+			"bios_settings":        string(biosSettings),
 			// "bios_settings":        accessDetails.BuildBIOSSettings(host.Firmware),
 		}
 
