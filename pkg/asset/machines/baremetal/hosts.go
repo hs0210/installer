@@ -81,8 +81,6 @@ func Hosts(config *types.InstallConfig, machines []machineapi.Machine) (*HostSet
 				HardwareProfile: host.HardwareProfile,
 				BootMode:        baremetalhost.BootMode(host.BootMode),
 				RootDeviceHints: host.RootDeviceHints.MakeCRDHints(),
-				RAID:            host.RAID,
-				Firmware:        host.Firmware,
 			},
 		}
 		if i < len(machines) {
