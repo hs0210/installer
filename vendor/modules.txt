@@ -1367,6 +1367,7 @@ github.com/mitchellh/go-wordwrap
 # github.com/mitchellh/hashstructure v1.0.0
 github.com/mitchellh/hashstructure
 # github.com/mitchellh/mapstructure v1.3.3
+## explicit
 github.com/mitchellh/mapstructure
 # github.com/mitchellh/panicwrap v1.0.0
 github.com/mitchellh/panicwrap
