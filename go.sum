@@ -1066,6 +1066,8 @@ github.com/hooklift/iso9660 v1.0.0/go.mod h1:sOC47ru8lB0DlU0EZ7BJ0KCP5rDqOvx0c/5
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/hs0210/terraform-provider-ironic v0.3.3 h1:t18q++9kC6Yl3pQ/ZpC5xH/w4fi6HSHQTYTLYvQHQP8=
 github.com/hs0210/terraform-provider-ironic v0.3.3/go.mod h1:r0k8OSQ0VsL2xrVhojdgfQET6/Z7/AY5exHWG5pWE1E=
+github.com/hs0210/terraform-provider-ironic v0.3.4 h1:9SWDg/8z0mXOCVGMNFLqkczzN8fDzE931TZHsdZ6H0o=
+github.com/hs0210/terraform-provider-ironic v0.3.4/go.mod h1:BnHgFMqbWWYWQmuZ0vWQ+nH2YYCR90ZX32s9uYBV8rs=
 github.com/huandu/xstrings v1.2.0/go.mod h1:DvyZB1rfVYsBIigL8HwpZgxHwXozlTgGqn63UyNX5k4=
 github.com/hudl/fargo v1.3.0/go.mod h1:y3CKSmjA+wD2gak7sUSXTAoopbhU08POFhmITJgmKTg=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
