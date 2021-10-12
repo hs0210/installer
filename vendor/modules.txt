@@ -1324,7 +1324,7 @@ github.com/mattn/go-isatty
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/metal3-io/baremetal-operator v0.0.0-20210706141527-5240e42f012a => github.com/openshift/baremetal-operator v0.0.0-20210706141527-5240e42f012a
 ## explicit
-github.com/metal3-io/baremetal-operator/pkg/bmc
+github.com/metal3-io/baremetal-operator/ironic/bmc
 github.com/metal3-io/baremetal-operator/pkg/hardware
 # github.com/metal3-io/baremetal-operator/apis v0.0.0 => github.com/openshift/baremetal-operator/apis v0.0.0-20210706141527-5240e42f012a
 ## explicit
