@@ -11,7 +11,7 @@ import (
 
 	"github.com/apparentlymart/go-cidr/cidr"
 	"github.com/go-playground/validator/v10"
-	"github.com/metal3-io/baremetal-operator/pkg/bmc"
+	"github.com/metal3-io/baremetal-operator/pkg/ironic/bmc"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/apimachinery/pkg/util/validation/field"

@@ -1,0 +1,152 @@
+From fd01aa20bf8a99ecc3f9509dd60c1d632ea14084 Mon Sep 17 00:00:00 2001
+From: Hu Shuai <hus.fnst@cn.fujitsu.com>
+Date: Tue, 7 Sep 2021 16:48:55 +0800
+Subject: [PATCH] Support RAID and BIOS configuration for baremetal IPI
+ deployments
+
+Signed-off-by: Hu Shuai <hus.fnst@cn.fujitsu.com>
+---
+ data/data/baremetal/masters/main.tf |  2 ++
+ go.mod                              |  1 +
+ pkg/asset/cluster/tfvars.go         |  2 ++
+ pkg/tfvars/baremetal/baremetal.go   | 33 +++++++++++++++++++++++++++--
+ vendor/modules.txt                  |  1 +
+ 5 files changed, 37 insertions(+), 2 deletions(-)
+
+diff --git a/data/data/baremetal/masters/main.tf b/data/data/baremetal/masters/main.tf
+index f30d93a56..f86115dd3 100644
+--- a/data/data/baremetal/masters/main.tf
++++ b/data/data/baremetal/masters/main.tf
+@@ -25,6 +25,8 @@ resource "ironic_node_v1" "openshift-master-host" {
+   power_interface      = var.hosts[count.index]["power_interface"]
+   raid_interface       = var.hosts[count.index]["raid_interface"]
+   vendor_interface     = var.hosts[count.index]["vendor_interface"]
++  raid_config          = var.hosts[count.index]["raid_config"]
++  bios_settings        = var.hosts[count.index]["bios_settings"]
+ }
+ 
+ resource "ironic_deployment" "openshift-master-deployment" {
+diff --git a/go.mod b/go.mod
+index 836827ee3..42801436f 100644
+--- a/go.mod
++++ b/go.mod
+@@ -120,6 +120,7 @@ require (
+ 	sigs.k8s.io/cluster-api-provider-azure v0.0.0
+ 	sigs.k8s.io/cluster-api-provider-openstack v0.0.0
+ 	sigs.k8s.io/controller-tools v0.4.1
++	sigs.k8s.io/yaml v1.2.0
+ )
+ 
+ replace (
+diff --git a/pkg/asset/cluster/tfvars.go b/pkg/asset/cluster/tfvars.go
+index f0c656329..82e5a6330 100644
+--- a/pkg/asset/cluster/tfvars.go
++++ b/pkg/asset/cluster/tfvars.go
+@@ -554,6 +554,7 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
+ 			imageCacheIP = installConfig.Config.Platform.BareMetal.BootstrapProvisioningIP
+ 		}
+ 
++		hostFiles := mastersAsset.HostFiles
+ 		data, err = baremetaltfvars.TFVars(
+ 			installConfig.Config.Platform.BareMetal.LibvirtURI,
+ 			installConfig.Config.Platform.BareMetal.APIVIP,
+@@ -564,6 +565,7 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
+ 			installConfig.Config.Platform.BareMetal.ProvisioningBridge,
+ 			installConfig.Config.Platform.BareMetal.ProvisioningMACAddress,
+ 			installConfig.Config.Platform.BareMetal.Hosts,
++			hostFiles,
+ 			string(*rhcosImage),
+ 			ironicCreds.Username,
+ 			ironicCreds.Password,
+diff --git a/pkg/tfvars/baremetal/baremetal.go b/pkg/tfvars/baremetal/baremetal.go
+index 65ebb4182..cb9638751 100644
+--- a/pkg/tfvars/baremetal/baremetal.go
++++ b/pkg/tfvars/baremetal/baremetal.go
+@@ -9,11 +9,14 @@ import (
+ 	"path"
+ 	"strings"
+ 
++	baremetalhost "github.com/metal3-io/baremetal-operator/apis/metal3.io/v1alpha1"
+ 	"github.com/metal3-io/baremetal-operator/pkg/bmc"
+ 	"github.com/metal3-io/baremetal-operator/pkg/hardware"
++	"github.com/openshift/installer/pkg/asset"
+ 	"github.com/openshift/installer/pkg/tfvars/internal/cache"
+ 	"github.com/openshift/installer/pkg/types/baremetal"
+ 	"github.com/pkg/errors"
++	"sigs.k8s.io/yaml"
+ )
+ 
+ type config struct {
+@@ -35,7 +38,7 @@ type config struct {
+ }
+ 
+ // TFVars generates bare metal specific Terraform variables.
+-func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, externalMAC, provisioningBridge, provisioningMAC string, platformHosts []*baremetal.Host, image, ironicUsername, ironicPassword, ignition string) ([]byte, error) {
++func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, externalMAC, provisioningBridge, provisioningMAC string, platformHosts []*baremetal.Host, hostFiles []*asset.File, image, ironicUsername, ironicPassword, ignition string) ([]byte, error) {
+ 	bootstrapOSImage, err := cache.DownloadImageFile(bootstrapOSImage)
+ 	if err != nil {
+ 		return nil, errors.Wrap(err, "failed to use cached bootstrap libvirt image")
+@@ -43,7 +46,7 @@ func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge,
+ 
+ 	var hosts, rootDevices, properties, driverInfos, instanceInfos []map[string]interface{}
+ 
+-	for _, host := range platformHosts {
++	for i, host := range platformHosts {
+ 		// Get hardware profile
+ 		if host.HardwareProfile == "default" {
+ 			host.HardwareProfile = hardware.DefaultProfileName
+@@ -67,6 +70,30 @@ func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge,
+ 		driverInfo["deploy_kernel"] = fmt.Sprintf("http://%s/images/ironic-python-agent.kernel", net.JoinHostPort(imageCacheIP, "80"))
+ 		driverInfo["deploy_ramdisk"] = fmt.Sprintf("http://%s/images/ironic-python-agent.initramfs", net.JoinHostPort(imageCacheIP, "80"))
+ 
++		var hostFile *asset.File
++		var raidConfig, biosSettings []byte
++		var bmh baremetalhost.BareMetalHost
++
++		if host.Role == "master" {
++			hostFile = hostFiles[i]
++			err = yaml.Unmarshal(hostFile.Data, &bmh)
++			if err != nil {
++				return nil, err
++			}
++			if bmh.Spec.RAID != nil {
++				raidConfig, err = json.Marshal(bmh.Spec.RAID)
++				if err != nil {
++					return nil, err
++				}
++			}
++			if bmh.Spec.Firmware != nil {
++				biosSettings, err = json.Marshal(bmh.Spec.Firmware)
++				if err != nil {
++					return nil, err
++				}
++			}
++		}
++
+ 		// Host Details
+ 		hostMap := map[string]interface{}{
+ 			"name":                 host.Name,
+@@ -77,6 +104,8 @@ func TFVars(libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge,
+ 			"power_interface":      accessDetails.PowerInterface(),
+ 			"raid_interface":       accessDetails.RAIDInterface(),
+ 			"vendor_interface":     accessDetails.VendorInterface(),
++			"raid_config":          string(raidConfig),
++			"bios_settings":        string(biosSettings),
+ 		}
+ 
+ 		// Explicitly set the boot mode to the default "uefi" in case
+diff --git a/vendor/modules.txt b/vendor/modules.txt
+index 91bea85d3..9c59ad38d 100644
+--- a/vendor/modules.txt
++++ b/vendor/modules.txt
+@@ -2926,6 +2926,7 @@ sigs.k8s.io/structured-merge-diff/v4/schema
+ sigs.k8s.io/structured-merge-diff/v4/typed
+ sigs.k8s.io/structured-merge-diff/v4/value
+ # sigs.k8s.io/yaml v1.2.0
++## explicit
+ sigs.k8s.io/yaml
+ # cloud.google.com/go => cloud.google.com/go v0.57.0
+ # github.com/IBM-Cloud/terraform-provider-ibm => github.com/openshift/terraform-provider-ibm v1.26.2-openshift-2
+-- 
+2.26.3
+
