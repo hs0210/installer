@@ -579,6 +579,7 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 			imageCacheIP = installConfig.Config.Platform.BareMetal.BootstrapProvisioningIP
 		}
 
+		hostFiles := mastersAsset.HostFiles
 		data, err = baremetaltfvars.TFVars(
 			*installConfig.Config.ControlPlane.Replicas,
 			installConfig.Config.Platform.BareMetal.LibvirtURI,
@@ -590,6 +591,7 @@ func (t *TerraformVariables) Generate(parents asset.Parents) error {
 			installConfig.Config.Platform.BareMetal.ProvisioningBridge,
 			installConfig.Config.Platform.BareMetal.ProvisioningMACAddress,
 			installConfig.Config.Platform.BareMetal.Hosts,
+			hostFiles,
 			string(*rhcosImage),
 			ironicCreds.Username,
 			ironicCreds.Password,
