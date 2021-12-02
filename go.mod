@@ -85,7 +85,7 @@ require (
 	github.com/wxnacy/wgo v1.0.4
 	github.com/zclconf/go-cty v1.6.1
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
-	golang.org/x/lint v0.0.0-20200302205851-738671d3881b
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c
 	google.golang.org/api v0.44.0
@@ -136,7 +136,9 @@ replace (
 	github.com/hashicorp/terraform-provider-vsphere => github.com/openshift/terraform-provider-vsphere v1.24.3-openshift
 	github.com/metal3-io/baremetal-operator => github.com/openshift/baremetal-operator v0.0.0-20211013175613-7c239ae15151 // Use OpenShift fork
 	github.com/metal3-io/baremetal-operator/apis => github.com/openshift/baremetal-operator/apis v0.0.0-20211013175613-7c239ae15151 // Use OpenShift fork
+	github.com/metal3-io/baremetal-operator/pkg/hardwareutils => github.com/metal3-io/baremetal-operator/pkg/hardwareutils v0.0.0-20211201170610-92ffa60c683d
 	github.com/metal3-io/cluster-api-provider-baremetal => github.com/openshift/cluster-api-provider-baremetal v0.0.0-20190821174549-a2a477909c1d // Pin OpenShift fork
+	github.com/openshift-metal3/terraform-provider-ironic => github.com/hs0210/terraform-provider-ironic v0.3.7
 	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200929181438-91d71ef2122c // Pin client-go
 	github.com/openshift/machine-config-operator => github.com/openshift/machine-config-operator v0.0.1-0.20201009041932-4fe8559913b8 // Pin MCO so it doesn't get downgraded
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2

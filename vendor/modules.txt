@@ -1446,6 +1446,8 @@ github.com/metal3-io/baremetal-operator/pkg/hardware
 # github.com/metal3-io/baremetal-operator/apis v0.0.0 => github.com/openshift/baremetal-operator/apis v0.0.0-20211013175613-7c239ae15151
 ## explicit
 github.com/metal3-io/baremetal-operator/apis/metal3.io/v1alpha1
+# github.com/metal3-io/baremetal-operator/pkg/hardwareutils v0.0.0 => github.com/metal3-io/baremetal-operator/pkg/hardwareutils v0.0.0-20211201170610-92ffa60c683d
+github.com/metal3-io/baremetal-operator/pkg/hardwareutils/bmc
 # github.com/metal3-io/cluster-api-provider-baremetal v0.0.0 => github.com/openshift/cluster-api-provider-baremetal v0.0.0-20190821174549-a2a477909c1d
 ## explicit
 github.com/metal3-io/cluster-api-provider-baremetal/pkg/apis
@@ -1507,7 +1509,7 @@ github.com/opencontainers/go-digest
 # github.com/opencontainers/image-spec v1.0.2-0.20190823105129-775207bd45b6
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/openshift-metal3/terraform-provider-ironic v0.2.6
+# github.com/openshift-metal3/terraform-provider-ironic v0.2.6 => github.com/hs0210/terraform-provider-ironic v0.3.7
 ## explicit
 github.com/openshift-metal3/terraform-provider-ironic/ironic
 # github.com/openshift/api v0.0.0-20211119153416-313e51eab8c8
@@ -2225,7 +2227,7 @@ golang.org/x/crypto/ssh/agent
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
 golang.org/x/crypto/ssh/knownhosts
 golang.org/x/crypto/ssh/terminal
-# golang.org/x/lint v0.0.0-20200302205851-738671d3881b
+# golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
 ## explicit
 golang.org/x/lint
 golang.org/x/lint/golint
@@ -3059,7 +3061,9 @@ sigs.k8s.io/yaml
 # github.com/hashicorp/terraform-provider-vsphere => github.com/openshift/terraform-provider-vsphere v1.24.3-openshift
 # github.com/metal3-io/baremetal-operator => github.com/openshift/baremetal-operator v0.0.0-20211013175613-7c239ae15151
 # github.com/metal3-io/baremetal-operator/apis => github.com/openshift/baremetal-operator/apis v0.0.0-20211013175613-7c239ae15151
+# github.com/metal3-io/baremetal-operator/pkg/hardwareutils => github.com/metal3-io/baremetal-operator/pkg/hardwareutils v0.0.0-20211201170610-92ffa60c683d
 # github.com/metal3-io/cluster-api-provider-baremetal => github.com/openshift/cluster-api-provider-baremetal v0.0.0-20190821174549-a2a477909c1d
+# github.com/openshift-metal3/terraform-provider-ironic => github.com/hs0210/terraform-provider-ironic v0.3.7
 # github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20200929181438-91d71ef2122c
 # github.com/openshift/machine-config-operator => github.com/openshift/machine-config-operator v0.0.1-0.20201009041932-4fe8559913b8
 # github.com/spf13/afero => github.com/spf13/afero v1.2.2
