@@ -9,11 +9,14 @@ import (
 	"path"
 	"strings"
 
+	baremetalhost "github.com/metal3-io/baremetal-operator/apis/metal3.io/v1alpha1"
 	"github.com/metal3-io/baremetal-operator/pkg/hardware"
 	"github.com/metal3-io/baremetal-operator/pkg/hardwareutils/bmc"
+	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/tfvars/internal/cache"
 	"github.com/openshift/installer/pkg/types/baremetal"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
 )
 
 type config struct {
@@ -45,7 +48,7 @@ func init() {
 }
 
 // TFVars generates bare metal specific Terraform variables.
-func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, externalMAC, provisioningBridge, provisioningMAC string, platformHosts []*baremetal.Host, image, ironicUsername, ironicPassword, ignition string) ([]byte, error) {
+func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, bootstrapOSImage, externalBridge, externalMAC, provisioningBridge, provisioningMAC string, platformHosts []*baremetal.Host, hostFiles []*asset.File, image, ironicUsername, ironicPassword, ignition string) ([]byte, error) {
 	bootstrapOSImage, err := imageDownloader(bootstrapOSImage)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to use cached bootstrap libvirt image")
@@ -54,7 +57,7 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 	var masters, rootDevices, properties, driverInfos, instanceInfos []map[string]interface{}
 
 	// Select the first N hosts as masters, excluding the workers
-	for _, host := range platformHosts {
+	for i, host := range platformHosts {
 		if len(masters) >= int(numControlPlaneReplicas) {
 			break
 		}
@@ -87,6 +90,28 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 		driverInfo["deploy_kernel"] = fmt.Sprintf("http://%s/images/ironic-python-agent.kernel", net.JoinHostPort(imageCacheIP, "80"))
 		driverInfo["deploy_ramdisk"] = fmt.Sprintf("http://%s/images/ironic-python-agent.initramfs", net.JoinHostPort(imageCacheIP, "80"))
 
+		var hostFile *asset.File
+		var raidConfig, biosSettings []byte
+		var bmh baremetalhost.BareMetalHost
+
+		hostFile = hostFiles[i]
+		err = yaml.Unmarshal(hostFile.Data, &bmh)
+		if err != nil {
+			return nil, err
+		}
+		if bmh.Spec.RAID != nil {
+			raidConfig, err = json.Marshal(bmh.Spec.RAID)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if bmh.Spec.Firmware != nil {
+			biosSettings, err = json.Marshal(bmh.Spec.Firmware)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		// Host Details
 		hostMap := map[string]interface{}{
 			"name":                 host.Name,
@@ -97,6 +122,8 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 			"power_interface":      accessDetails.PowerInterface(),
 			"raid_interface":       accessDetails.RAIDInterface(),
 			"vendor_interface":     accessDetails.VendorInterface(),
+			"raid_config":          string(raidConfig),
+			"bios_settings":        string(biosSettings),
 		}
 
 		// Explicitly set the boot mode to the default "uefi" in case
