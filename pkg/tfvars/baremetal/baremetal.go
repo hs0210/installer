@@ -114,16 +114,18 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 
 		// Host Details
 		hostMap := map[string]interface{}{
-			"name":                 host.Name,
-			"port_address":         host.BootMACAddress,
-			"driver":               accessDetails.Driver(),
-			"boot_interface":       accessDetails.BootInterface(),
-			"management_interface": accessDetails.ManagementInterface(),
-			"power_interface":      accessDetails.PowerInterface(),
-			"raid_interface":       accessDetails.RAIDInterface(),
-			"vendor_interface":     accessDetails.VendorInterface(),
-			"raid_config":          string(raidConfig),
-			"bios_settings":        string(biosSettings),
+			"name":                                 host.Name,
+			"port_address":                         host.BootMACAddress,
+			"bmc_address":                          host.BMC.Address,
+			"bmc_disable_certificate_verification": host.BMC.DisableCertificateVerification,
+			"driver":                               accessDetails.Driver(),
+			"boot_interface":                       accessDetails.BootInterface(),
+			"management_interface":                 accessDetails.ManagementInterface(),
+			"power_interface":                      accessDetails.PowerInterface(),
+			"raid_interface":                       accessDetails.RAIDInterface(),
+			"vendor_interface":                     accessDetails.VendorInterface(),
+			"raid_config":                          string(raidConfig),
+			"bios_settings":                        string(biosSettings),
 		}
 
 		// Explicitly set the boot mode to the default "uefi" in case
