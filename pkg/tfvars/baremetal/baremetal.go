@@ -116,6 +116,7 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 		hostMap := map[string]interface{}{
 			"name":                 host.Name,
 			"port_address":         host.BootMACAddress,
+			"bmc_address":          host.BMC.Address,
 			"driver":               accessDetails.Driver(),
 			"boot_interface":       accessDetails.BootInterface(),
 			"management_interface": accessDetails.ManagementInterface(),

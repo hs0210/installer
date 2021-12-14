@@ -26,6 +26,7 @@ resource "ironic_node_v1" "openshift-master-host" {
     },
   ]
 
+  bmc_address = var.masters[count.index]["bmc_address"]
   properties  = var.properties[count.index]
   root_device = var.root_devices[count.index]
 
