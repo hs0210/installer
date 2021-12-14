@@ -59,7 +59,6 @@ type Config struct {
 
 	TerraformVersion string
 	SDKVersion       string
-	EnableLogger     bool
 
 	*mutexkv.MutexKV
 }
@@ -177,9 +176,9 @@ func (c *Config) LoadAndValidate() error {
 		return err
 	}
 
-	c.EnableLogger = enableLogging(c.EnableLogger)
 	var logger osClient.Logger
-	if c.EnableLogger {
+	// if OS_DEBUG is set, log the requests and responses
+	if os.Getenv("OS_DEBUG") != "" {
 		logger = &osClient.DefaultLogger{}
 	}
 
@@ -425,19 +424,4 @@ func (c *Config) SharedfilesystemV2Client(region string) (*gophercloud.ServiceCl
 
 func (c *Config) KeyManagerV1Client(region string) (*gophercloud.ServiceClient, error) {
 	return c.CommonServiceClientInit(openstack.NewKeyManagerV1, region, "key-manager")
-}
-
-// A wrapper to determine if logging in gophercloud should be enabled, with a fallback
-// to the OS_DEBUG environment variable when no explicit configuration is passed.
-func enableLogging(enable bool) bool {
-	if enable {
-		return true
-	}
-
-	// if OS_DEBUG is set, log the requests and responses
-	if os.Getenv("OS_DEBUG") != "" {
-		return true
-	}
-
-	return false
 }
