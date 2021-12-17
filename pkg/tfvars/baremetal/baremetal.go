@@ -90,12 +90,12 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 		driverInfo["deploy_kernel"] = fmt.Sprintf("http://%s/images/ironic-python-agent.kernel", net.JoinHostPort(imageCacheIP, "80"))
 		driverInfo["deploy_ramdisk"] = fmt.Sprintf("http://%s/images/ironic-python-agent.initramfs", net.JoinHostPort(imageCacheIP, "80"))
 
-		var hostFile *asset.File
-		var raidConfig, biosSettings []byte
+		var raidConfig, bmhFirmwareConfig, biosSettings []byte
+		var bmcFirmwareConfig *bmc.FirmwareConfig
+		var tmpBiosSettings []map[string]string
 		var bmh baremetalhost.BareMetalHost
 
-		hostFile = hostFiles[i]
-		err = yaml.Unmarshal(hostFile.Data, &bmh)
+		err = yaml.Unmarshal(hostFiles[i].Data, &bmh)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,21 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 			}
 		}
 		if bmh.Spec.Firmware != nil {
-			biosSettings, err = json.Marshal(bmh.Spec.Firmware)
+			bmhFirmwareConfig, err = json.Marshal(bmh.Spec.Firmware)
+			if err != nil {
+				return nil, err
+			}
+
+			if err = json.Unmarshal(bmhFirmwareConfig, &bmcFirmwareConfig); err != nil {
+				return nil, err
+			}
+
+			tmpBiosSettings, err = accessDetails.BuildBIOSSettings(bmcFirmwareConfig)
+			if err != nil {
+				return nil, err
+			}
+
+			biosSettings, err = json.Marshal(tmpBiosSettings)
 			if err != nil {
 				return nil, err
 			}
@@ -114,18 +128,16 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 
 		// Host Details
 		hostMap := map[string]interface{}{
-			"name":                                 host.Name,
-			"port_address":                         host.BootMACAddress,
-			"bmc_address":                          host.BMC.Address,
-			"bmc_disable_certificate_verification": host.BMC.DisableCertificateVerification,
-			"driver":                               accessDetails.Driver(),
-			"boot_interface":                       accessDetails.BootInterface(),
-			"management_interface":                 accessDetails.ManagementInterface(),
-			"power_interface":                      accessDetails.PowerInterface(),
-			"raid_interface":                       accessDetails.RAIDInterface(),
-			"vendor_interface":                     accessDetails.VendorInterface(),
-			"raid_config":                          string(raidConfig),
-			"bios_settings":                        string(biosSettings),
+			"name":                 host.Name,
+			"port_address":         host.BootMACAddress,
+			"driver":               accessDetails.Driver(),
+			"boot_interface":       accessDetails.BootInterface(),
+			"management_interface": accessDetails.ManagementInterface(),
+			"power_interface":      accessDetails.PowerInterface(),
+			"raid_interface":       accessDetails.RAIDInterface(),
+			"vendor_interface":     accessDetails.VendorInterface(),
+			"raid_config":          string(raidConfig),
+			"bios_settings":        string(biosSettings),
 		}
 
 		// Explicitly set the boot mode to the default "uefi" in case

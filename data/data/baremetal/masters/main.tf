@@ -32,9 +32,6 @@ resource "ironic_node_v1" "openshift-master-host" {
   driver      = var.masters[count.index]["driver"]
   driver_info = var.driver_infos[count.index]
 
-  bmc_address                          = var.masters[count.index]["bmc_address"]
-  bmc_disable_certificate_verification = var.masters[count.index]["bmc_disable_certificate_verification"]
-
   boot_interface       = var.masters[count.index]["boot_interface"]
   management_interface = var.masters[count.index]["management_interface"]
   power_interface      = var.masters[count.index]["power_interface"]
