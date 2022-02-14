@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/types/baremetal"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,6 +25,7 @@ func TestMastersSelectionByRole(t *testing.T) {
 		provisioningBridge      string
 		provisioningMAC         string
 		platformHosts           []*baremetal.Host
+		hostFiles               []*asset.File
 		image                   string
 		ironicUsername          string
 		ironicPassword          string
@@ -40,6 +42,11 @@ func TestMastersSelectionByRole(t *testing.T) {
 				host("master-1", "master"),
 				host("worker-0", "worker"),
 			),
+			hostFiles: hostFiles(
+				files("master-0"),
+				files("master-2"),
+				files("worker-0"),
+			),
 			expectedHosts: []string{"master-0", "master-1"},
 		},
 		{
@@ -49,6 +56,11 @@ func TestMastersSelectionByRole(t *testing.T) {
 				host("master-0", "master"),
 				host("worker-0", "worker"),
 				host("worker-1", "worker"),
+			),
+			hostFiles: hostFiles(
+				files("master-0"),
+				files("worker-0"),
+				files("worker-1"),
 			),
 			expectedHosts: []string{"master-0"},
 		},
@@ -60,6 +72,11 @@ func TestMastersSelectionByRole(t *testing.T) {
 				host("master-0", ""),
 				host("master-1", ""),
 			),
+			hostFiles: hostFiles(
+				files("worker-0"),
+				files("master-0"),
+				files("master-1"),
+			),
 			expectedHosts: []string{"master-0", "master-1"},
 		},
 		{
@@ -69,6 +86,11 @@ func TestMastersSelectionByRole(t *testing.T) {
 				host("master-0", ""),
 				host("master-1", ""),
 				host("master-2", ""),
+			),
+			hostFiles: hostFiles(
+				files("master-0"),
+				files("master-1"),
+				files("master-2"),
 			),
 			expectedHosts: []string{"master-0", "master-1", "master-2"},
 		},
@@ -80,6 +102,10 @@ func TestMastersSelectionByRole(t *testing.T) {
 				host("master-1", "master"),
 				host("master-2", "master"),
 			),
+			hostFiles: hostFiles(
+				files("master-0"),
+				files("master-1"),
+			),
 			expectedHosts: []string{"master-0", "master-1"},
 		},
 		{
@@ -90,6 +116,10 @@ func TestMastersSelectionByRole(t *testing.T) {
 				host("master-1", "master"),
 				host("master-2", ""),
 			),
+			hostFiles: hostFiles(
+				files("master-0"),
+				files("master-1"),
+			),
 			expectedHosts: []string{"master-0", "master-1"},
 		},
 		{
@@ -99,6 +129,10 @@ func TestMastersSelectionByRole(t *testing.T) {
 				host("master-0", ""),
 				host("master-1", ""),
 				host("master-2", ""),
+			),
+			hostFiles: hostFiles(
+				files("master-0"),
+				files("master-1"),
 			),
 			expectedHosts: []string{"master-0", "master-1"},
 		},
@@ -112,6 +146,13 @@ func TestMastersSelectionByRole(t *testing.T) {
 				host("master-0", ""),
 				host("master-1", ""),
 				host("master-2", ""),
+			),
+			hostFiles: hostFiles(
+				files("worker-0"),
+				files("worker-1"),
+				files("worker-2"),
+				files("master-0"),
+				files("master-1"),
 			),
 			expectedHosts: []string{"master-0", "master-1"},
 		},
@@ -135,6 +176,7 @@ func TestMastersSelectionByRole(t *testing.T) {
 				tc.provisioningBridge,
 				tc.provisioningMAC,
 				tc.platformHosts,
+				tc.hostFiles,
 				tc.image,
 				tc.ironicUsername,
 				tc.ironicPassword,
@@ -171,4 +213,15 @@ func host(name, tag string) *baremetal.Host {
 
 func platformHosts(hosts ...*baremetal.Host) []*baremetal.Host {
 	return hosts
+}
+
+func files(name string) *asset.File {
+	return &asset.File{
+		Filename: name,
+		Data:     nil,
+	}
+}
+
+func hostFiles(files ...*asset.File) []*asset.File {
+	return files
 }
