@@ -91,7 +91,9 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 		driverInfo["deploy_ramdisk"] = fmt.Sprintf("http://%s/%s.initramfs", net.JoinHostPort(imageCacheIP, "8084"), host.Name)
 		driverInfo["deploy_iso"] = fmt.Sprintf("http://%s/%s.iso", net.JoinHostPort(imageCacheIP, "8084"), host.Name)
 
-		var raidConfig, biosSettings []byte
+		var raidConfig, bmhFirmwareConfig, biosSettings []byte
+		var bmcFirmwareConfig *bmc.FirmwareConfig
+		var tmpBiosSettings []map[string]string
 		var bmh baremetalhost.BareMetalHost
 
 		err = yaml.Unmarshal(hostFiles[i].Data, &bmh)
@@ -105,7 +107,18 @@ func TFVars(numControlPlaneReplicas int64, libvirtURI, apiVIP, imageCacheIP, boo
 			}
 		}
 		if bmh.Spec.Firmware != nil {
-			biosSettings, err = json.Marshal(bmh.Spec.Firmware)
+			bmhFirmwareConfig, err = json.Marshal(bmh.Spec.Firmware)
+			if err != nil {
+				return nil, err
+			}
+			if err = json.Unmarshal(bmhFirmwareConfig, &bmcFirmwareConfig); err != nil {
+				return nil, err
+			}
+			tmpBiosSettings, err = accessDetails.BuildBIOSSettings(bmcFirmwareConfig)
+			if err != nil {
+				return nil, err
+			}
+			biosSettings, err = json.Marshal(tmpBiosSettings)
 			if err != nil {
 				return nil, err
 			}
