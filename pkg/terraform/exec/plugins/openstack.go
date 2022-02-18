@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hashicorp/terraform-plugin-sdk/plugin"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 	"github.com/terraform-provider-openstack/terraform-provider-openstack/openstack"
 )
 

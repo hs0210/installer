@@ -104,6 +104,8 @@ require (
 	sigs.k8s.io/controller-tools v0.7.0
 )
 
+require github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.0
+
 require (
 	cloud.google.com/go/bigtable v1.5.0 // indirect
 	cloud.google.com/go/storage v1.11.0 // indirect
@@ -248,7 +250,6 @@ require (
 	github.com/hashicorp/terraform-json v0.13.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.5.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.2.0 // indirect
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.0 // indirect
 	github.com/hashicorp/terraform-plugin-test/v2 v2.1.2 // indirect
 	github.com/hashicorp/terraform-registry-address v0.0.0-20210412075316-9b2996cce896 // indirect
 	github.com/hashicorp/terraform-svchost v0.0.0-20200729002733-f050f53b9734 // indirect
