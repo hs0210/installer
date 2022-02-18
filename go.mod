@@ -33,7 +33,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.2.0
-	github.com/gophercloud/gophercloud v0.22.0
+	github.com/gophercloud/gophercloud v0.24.0
 	github.com/gophercloud/utils v0.0.0-20210720165645-8a3ad2ad9e70
 	github.com/h2non/filetype v1.0.12
 	github.com/hashicorp/aws-sdk-go-base v0.7.0 // indirect
@@ -82,9 +82,9 @@ require (
 	github.com/vincent-petithory/dataurl v0.0.0-20191104211930-d1553a71de50
 	github.com/vmware/govmomi v0.24.0
 	github.com/zclconf/go-cty v1.8.1
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616
-	golang.org/x/net v0.0.0-20210825183410-e898025ed96a
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
 	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f
 	golang.org/x/sys v0.0.0-20211029165221-6e7872819dc8
 	google.golang.org/api v0.44.0
@@ -359,7 +359,7 @@ replace (
 	cloud.google.com/go => cloud.google.com/go v0.57.0
 	github.com/IBM-Cloud/terraform-provider-ibm => github.com/openshift/terraform-provider-ibm v1.26.2-openshift-2
 	github.com/go-log/log => github.com/go-log/log v0.1.1-0.20181211034820-a514cf01a3eb // Pinned by MCO
-	github.com/gophercloud/gophercloud => github.com/gophercloud/gophercloud v0.17.0
+	github.com/gophercloud/gophercloud => github.com/gophercloud/gophercloud v0.24.0
 	github.com/hashicorp/terraform => github.com/openshift/hashicorp-terraform v0.14.6-openshift-1 // Pin to fork with deduplicated rpc types v0.14.6-openshift-1
 	github.com/hashicorp/terraform-plugin-sdk => github.com/openshift/hashicorp-terraform-plugin-sdk v1.16.0-openshift // Pin to fork with public rpc types
 	github.com/hashicorp/terraform-provider-vsphere => github.com/openshift/terraform-provider-vsphere v1.24.3-openshift

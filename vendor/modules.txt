@@ -1060,8 +1060,8 @@ github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
 github.com/googleapis/gnostic/jsonschema
 github.com/googleapis/gnostic/openapiv2
-# github.com/gophercloud/gophercloud v0.22.0 => github.com/gophercloud/gophercloud v0.17.0
-## explicit; go 1.13
+# github.com/gophercloud/gophercloud v0.24.0 => github.com/gophercloud/gophercloud v0.24.0
+## explicit; go 1.14
 github.com/gophercloud/gophercloud
 github.com/gophercloud/gophercloud/openstack
 github.com/gophercloud/gophercloud/openstack/baremetal/httpbasic
@@ -2381,7 +2381,7 @@ go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/propagation
 go.opencensus.io/trace/tracestate
-# golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+# golang.org/x/crypto v0.0.0-20211202192323-5770296d904e
 ## explicit; go 1.17
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
@@ -2391,6 +2391,7 @@ golang.org/x/crypto/curve25519
 golang.org/x/crypto/curve25519/internal/field
 golang.org/x/crypto/ed25519
 golang.org/x/crypto/ed25519/internal/edwards25519
+golang.org/x/crypto/internal/poly1305
 golang.org/x/crypto/internal/subtle
 golang.org/x/crypto/md4
 golang.org/x/crypto/openpgp
@@ -2402,7 +2403,6 @@ golang.org/x/crypto/openpgp/s2k
 golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/pkcs12
 golang.org/x/crypto/pkcs12/internal/rc2
-golang.org/x/crypto/poly1305
 golang.org/x/crypto/scrypt
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/agent
@@ -2420,7 +2420,7 @@ golang.org/x/mod/modfile
 golang.org/x/mod/module
 golang.org/x/mod/semver
 golang.org/x/mod/sumdb/dirhash
-# golang.org/x/net v0.0.0-20210825183410-e898025ed96a
+# golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
 ## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -3141,7 +3141,7 @@ sigs.k8s.io/yaml
 # cloud.google.com/go => cloud.google.com/go v0.57.0
 # github.com/IBM-Cloud/terraform-provider-ibm => github.com/openshift/terraform-provider-ibm v1.26.2-openshift-2
 # github.com/go-log/log => github.com/go-log/log v0.1.1-0.20181211034820-a514cf01a3eb
-# github.com/gophercloud/gophercloud => github.com/gophercloud/gophercloud v0.17.0
+# github.com/gophercloud/gophercloud => github.com/gophercloud/gophercloud v0.24.0
 # github.com/hashicorp/terraform => github.com/openshift/hashicorp-terraform v0.14.6-openshift-1
 # github.com/hashicorp/terraform-plugin-sdk => github.com/openshift/hashicorp-terraform-plugin-sdk v1.16.0-openshift
 # github.com/hashicorp/terraform-provider-vsphere => github.com/openshift/terraform-provider-vsphere v1.24.3-openshift
