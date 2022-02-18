@@ -38,7 +38,7 @@ require (
 	github.com/h2non/filetype v1.0.12
 	github.com/hashicorp/aws-sdk-go-base v0.7.0 // indirect
 	github.com/hashicorp/go-azure-helpers v0.16.5
-	github.com/hashicorp/go-plugin v1.4.1
+	github.com/hashicorp/go-plugin v1.4.3
 	github.com/hashicorp/go-version v1.3.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/hashicorp/terraform v0.14.6
@@ -406,7 +406,7 @@ replace (
 	github.com/go-openapi/spec => github.com/go-openapi/spec v0.19.4
 	github.com/go-openapi/validate => github.com/go-openapi/validate v0.19.8
 	github.com/hashicorp/go-getter => github.com/hashicorp/go-getter v1.5.2
-	github.com/hashicorp/go-plugin => github.com/hashicorp/go-plugin v1.3.0
+	github.com/hashicorp/go-plugin => github.com/hashicorp/go-plugin v1.4.3
 	github.com/hashicorp/terraform-plugin-test/v2 => github.com/hashicorp/terraform-plugin-test/v2 v2.2.0
 	github.com/ulikunitz/xz => github.com/ulikunitz/xz v0.5.7
 	google.golang.org/api => google.golang.org/api v0.33.0
