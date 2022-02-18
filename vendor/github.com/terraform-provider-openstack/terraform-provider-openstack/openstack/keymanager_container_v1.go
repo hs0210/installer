@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/keymanager/v1/containers"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func keyManagerContainerV1WaitForContainerDeletion(kmClient *gophercloud.ServiceClient, id string) resource.StateRefreshFunc {
@@ -68,7 +69,7 @@ func keyManagerContainerV1GetUUIDfromContainerRef(ref string) string {
 }
 
 func expandKeyManagerContainerV1SecretRefs(secretRefs *schema.Set) []containers.SecretRef {
-	var l []containers.SecretRef
+	l := make([]containers.SecretRef, 0, len(secretRefs.List()))
 
 	for _, v := range secretRefs.List() {
 		if v, ok := v.(map[string]interface{}); ok {
@@ -89,7 +90,7 @@ func expandKeyManagerContainerV1SecretRefs(secretRefs *schema.Set) []containers.
 }
 
 func flattenKeyManagerContainerV1SecretRefs(sr []containers.SecretRef) []map[string]interface{} {
-	var m []map[string]interface{}
+	m := make([]map[string]interface{}, 0, len(sr))
 
 	for _, v := range sr {
 		m = append(m, map[string]interface{}{
@@ -102,7 +103,7 @@ func flattenKeyManagerContainerV1SecretRefs(sr []containers.SecretRef) []map[str
 }
 
 func flattenKeyManagerContainerV1Consumers(cr []containers.ConsumerRef) []map[string]interface{} {
-	var m []map[string]interface{}
+	m := make([]map[string]interface{}, 0, len(cr))
 
 	for _, v := range cr {
 		m = append(m, map[string]interface{}{

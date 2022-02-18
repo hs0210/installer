@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/gophercloud/gophercloud"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func networkingV2ReadAttributesTags(d *schema.ResourceData, tags []string) {
@@ -40,6 +41,19 @@ func retryOn409(err error) bool {
 			return true
 		}
 		if neutronError.Type == "IpAddressGenerationFailure" {
+			return true
+		}
+
+		// don't retry on quota or other errors
+		return false
+	case gophercloud.ErrDefault400:
+		neutronError, e := decodeNeutronError(err.ErrUnexpectedResponseCode.Body)
+		if e != nil {
+			// retry, when error type cannot be detected
+			log.Printf("[DEBUG] failed to decode a neutron error: %s", e)
+			return true
+		}
+		if neutronError.Type == "ExternalIpAddressExhausted" {
 			return true
 		}
 

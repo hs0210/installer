@@ -3,8 +3,8 @@ package openstack
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/databases"
@@ -23,7 +23,7 @@ func expandDatabaseInstanceV1Datastore(rawDatastore []interface{}) instances.Dat
 }
 
 func expandDatabaseInstanceV1Networks(rawNetworks []interface{}) []instances.NetworkOpts {
-	var networks []instances.NetworkOpts
+	networks := make([]instances.NetworkOpts, 0, len(rawNetworks))
 	for _, v := range rawNetworks {
 		network := v.(map[string]interface{})
 		networks = append(networks, instances.NetworkOpts{

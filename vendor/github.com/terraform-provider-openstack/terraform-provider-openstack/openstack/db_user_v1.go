@@ -3,7 +3,7 @@ package openstack
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/db/v1/databases"
@@ -23,7 +23,7 @@ func expandDatabaseUserV1Databases(rawDatabases []interface{}) databases.BatchCr
 }
 
 func flattenDatabaseUserV1Databases(dbs []databases.Database) []string {
-	var databases []string
+	databases := make([]string, 0, len(dbs))
 	for _, db := range dbs {
 		databases = append(databases, db.Name)
 	}

@@ -1,6 +1,7 @@
 package openstack
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -12,12 +13,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/members"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceImagesImageV2MemberStatusFromString(v string) images.ImageMemberStatus {
@@ -87,7 +88,9 @@ func resourceImagesImageV2File(client *gophercloud.ServiceClient, d *schema.Reso
 		return filename, nil
 	} else if furl := d.Get("image_source_url").(string); furl != "" {
 		dir := d.Get("image_cache_path").(string)
-		os.MkdirAll(dir, 0700)
+		if err := os.MkdirAll(dir, 0700); err != nil {
+			return "", fmt.Errorf("unable to create dir %s: %s", dir, err)
+		}
 		filename := filepath.Join(dir, fmt.Sprintf("%x.img", md5.Sum([]byte(furl))))
 
 		if _, err := os.Stat(filename); err != nil {
@@ -168,7 +171,7 @@ func resourceImagesImageV2ExpandProperties(v map[string]interface{}) map[string]
 	return properties
 }
 
-func resourceImagesImageV2UpdateComputedAttributes(diff *schema.ResourceDiff, meta interface{}) error {
+func resourceImagesImageV2UpdateComputedAttributes(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.HasChange("properties") {
 		// Only check if the image has been created.
 		if diff.Id() != "" {
@@ -209,7 +212,9 @@ func resourceImagesImageV2UpdateComputedAttributes(diff *schema.ResourceDiff, me
 			//
 			// If the user has changed properties, they will be caught at this
 			// point, too.
-			diff.SetNew("properties", newProperties)
+			if err := diff.SetNew("properties", newProperties); err != nil {
+				log.Printf("[DEBUG] unable set diff for properties key: %s", err)
+			}
 		}
 	}
 

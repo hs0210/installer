@@ -1,21 +1,23 @@
 package openstack
 
 import (
-	"fmt"
+	"context"
 	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/identity/v3/extensions/ec2credentials"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceIdentityEc2CredentialV3() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIdentityEc2CredentialV3Create,
-		Read:   resourceIdentityEc2CredentialV3Read,
-		Delete: resourceIdentityEc2CredentialV3Delete,
+		CreateContext: resourceIdentityEc2CredentialV3Create,
+		ReadContext:   resourceIdentityEc2CredentialV3Read,
+		DeleteContext: resourceIdentityEc2CredentialV3Delete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -62,17 +64,17 @@ func resourceIdentityEc2CredentialV3() *schema.Resource {
 	}
 }
 
-func resourceIdentityEc2CredentialV3Create(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityEc2CredentialV3Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 
 	identityClient, err := config.IdentityV3Client(GetRegion(d, config))
 	if err != nil {
-		return fmt.Errorf("Error creating OpenStack identity client: %s", err)
+		return diag.Errorf("Error creating OpenStack identity client: %s", err)
 	}
 
-	user, project, err := GetTokenInfo(identityClient)
+	tokenInfo, err := getTokenInfo(identityClient)
 	if err != nil {
-		return fmt.Errorf("Error getting token info: %s", err)
+		return diag.Errorf("Error getting token info: %s", err)
 	}
 
 	var tenantID string
@@ -80,7 +82,7 @@ func resourceIdentityEc2CredentialV3Create(d *schema.ResourceData, meta interfac
 	if definedProject, ok := d.GetOk("project_id"); ok {
 		tenantID = definedProject.(string)
 	} else {
-		tenantID = project
+		tenantID = tokenInfo.projectID
 	}
 
 	createOpts := ec2credentials.CreateOpts{
@@ -92,7 +94,7 @@ func resourceIdentityEc2CredentialV3Create(d *schema.ResourceData, meta interfac
 	if definedUser, ok := d.GetOk("user_id"); ok {
 		userID = definedUser.(string)
 	} else {
-		userID = user
+		userID = tokenInfo.userID
 	}
 
 	log.Printf("[DEBUG] openstack_identity_ec2_credential_v3 create options: %#v", createOpts)
@@ -101,9 +103,9 @@ func resourceIdentityEc2CredentialV3Create(d *schema.ResourceData, meta interfac
 
 	if err != nil {
 		if v, ok := err.(gophercloud.ErrDefault404); ok {
-			return fmt.Errorf("Error creating openstack_identity_ec2_credential_v3: %s", v.ErrUnexpectedResponseCode.Body)
+			return diag.Errorf("Error creating openstack_identity_ec2_credential_v3: %s", v.ErrUnexpectedResponseCode.Body)
 		}
-		return fmt.Errorf("Error creating openstack_identity_ec2_credential_v3: %s", err)
+		return diag.Errorf("Error creating openstack_identity_ec2_credential_v3: %s", err)
 	}
 
 	d.SetId(ec2Credential.Access)
@@ -114,19 +116,19 @@ func resourceIdentityEc2CredentialV3Create(d *schema.ResourceData, meta interfac
 	d.Set("project_id", ec2Credential.TenantID)
 	d.Set("trust_id", ec2Credential.TrustID)
 
-	return resourceIdentityEc2CredentialV3Read(d, meta)
+	return resourceIdentityEc2CredentialV3Read(ctx, d, meta)
 }
 
-func resourceIdentityEc2CredentialV3Read(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityEc2CredentialV3Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	identityClient, err := config.IdentityV3Client(GetRegion(d, config))
 	if err != nil {
-		return fmt.Errorf("Error creating OpenStack identity client: %s", err)
+		return diag.Errorf("Error creating OpenStack identity client: %s", err)
 	}
 
-	user, _, err := GetTokenInfo(identityClient)
+	tokenInfo, err := getTokenInfo(identityClient)
 	if err != nil {
-		return fmt.Errorf("Error getting token info: %s", err)
+		return diag.Errorf("Error getting token info: %s", err)
 	}
 
 	var userID string
@@ -134,12 +136,12 @@ func resourceIdentityEc2CredentialV3Read(d *schema.ResourceData, meta interface{
 	if definedUser, ok := d.GetOk("user_id"); ok {
 		userID = definedUser.(string)
 	} else {
-		userID = user
+		userID = tokenInfo.userID
 	}
 
 	ec2Credential, err := ec2credentials.Get(identityClient, userID, d.Id()).Extract()
 	if err != nil {
-		return CheckDeleted(d, err, "Error retrieving openstack_identity_ec2_credential_v3")
+		return diag.FromErr(CheckDeleted(d, err, "Error retrieving openstack_identity_ec2_credential_v3"))
 	}
 
 	log.Printf("[DEBUG] Retrieved openstack_identity_ec2_credential_v3 %s: %#v", d.Id(), ec2Credential)
@@ -153,16 +155,16 @@ func resourceIdentityEc2CredentialV3Read(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceIdentityEc2CredentialV3Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceIdentityEc2CredentialV3Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	identityClient, err := config.IdentityV3Client(GetRegion(d, config))
 	if err != nil {
-		return fmt.Errorf("Error creating OpenStack identity client: %s", err)
+		return diag.Errorf("Error creating OpenStack identity client: %s", err)
 	}
 
-	user, _, err := GetTokenInfo(identityClient)
+	tokenInfo, err := getTokenInfo(identityClient)
 	if err != nil {
-		return fmt.Errorf("Error getting token info: %s", err)
+		return diag.Errorf("Error getting token info: %s", err)
 	}
 
 	var userID string
@@ -170,14 +172,14 @@ func resourceIdentityEc2CredentialV3Delete(d *schema.ResourceData, meta interfac
 	if definedUser, ok := d.GetOk("user_id"); ok {
 		userID = definedUser.(string)
 	} else {
-		userID = user
+		userID = tokenInfo.userID
 	}
 
 	err = ec2credentials.Delete(identityClient, userID, d.Id()).ExtractErr()
 	if err != nil {
 		err = CheckDeleted(d, err, "Error deleting openstack_identity_ec2_credential_v3")
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 	return nil

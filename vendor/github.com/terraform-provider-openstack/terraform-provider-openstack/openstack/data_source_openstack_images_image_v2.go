@@ -1,20 +1,21 @@
 package openstack
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"sort"
 	"time"
 
-	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 )
 
 func dataSourceImagesImageV2() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImagesImageV2Read,
+		ReadContext: dataSourceImagesImageV2Read,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -108,6 +109,13 @@ func dataSourceImagesImageV2() *schema.Resource {
 				ForceNew: true,
 			},
 
+			"hidden": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: false,
+				Default:  false,
+			},
+
 			// Computed values
 			"container_format": {
 				Type:     schema.TypeString,
@@ -180,11 +188,11 @@ func dataSourceImagesImageV2() *schema.Resource {
 }
 
 // dataSourceImagesImageV2Read performs the image lookup.
-func dataSourceImagesImageV2Read(d *schema.ResourceData, meta interface{}) error {
+func dataSourceImagesImageV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	config := meta.(*Config)
 	imageClient, err := config.ImageV2Client(GetRegion(d, config))
 	if err != nil {
-		return fmt.Errorf("Error creating OpenStack image client: %s", err)
+		return diag.Errorf("Error creating OpenStack image client: %s", err)
 	}
 
 	visibility := resourceImagesImageV2VisibilityFromString(d.Get("visibility").(string))
@@ -199,6 +207,7 @@ func dataSourceImagesImageV2Read(d *schema.ResourceData, meta interface{}) error
 	listOpts := images.ListOpts{
 		Name:         d.Get("name").(string),
 		Visibility:   visibility,
+		Hidden:       d.Get("hidden").(bool),
 		Owner:        d.Get("owner").(string),
 		Status:       images.ImageStatusActive,
 		SizeMin:      int64(d.Get("size_min").(int)),
@@ -214,12 +223,12 @@ func dataSourceImagesImageV2Read(d *schema.ResourceData, meta interface{}) error
 	var image images.Image
 	allPages, err := images.List(imageClient, listOpts).AllPages()
 	if err != nil {
-		return fmt.Errorf("Unable to query images: %s", err)
+		return diag.Errorf("Unable to query images: %s", err)
 	}
 
 	allImages, err := images.ExtractImages(allPages)
 	if err != nil {
-		return fmt.Errorf("Unable to retrieve images: %s", err)
+		return diag.Errorf("Unable to retrieve images: %s", err)
 	}
 
 	properties := resourceImagesImageV2ExpandProperties(
@@ -232,7 +241,7 @@ func dataSourceImagesImageV2Read(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if len(allImages) < 1 {
-		return fmt.Errorf("Your query returned no results. " +
+		return diag.Errorf("Your query returned no results. " +
 			"Please change your search criteria and try again.")
 	}
 
@@ -243,7 +252,7 @@ func dataSourceImagesImageV2Read(d *schema.ResourceData, meta interface{}) error
 			image = mostRecentImage(allImages)
 		} else {
 			log.Printf("[DEBUG] Multiple results found: %#v", allImages)
-			return fmt.Errorf("Your query returned more than one result. Please try a more " +
+			return diag.Errorf("Your query returned more than one result. Please try a more " +
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 	} else {
@@ -272,6 +281,7 @@ func dataSourceImagesImageV2Read(d *schema.ResourceData, meta interface{}) error
 	d.Set("updated_at", image.UpdatedAt.Format(time.RFC3339))
 	d.Set("file", image.File)
 	d.Set("schema", image.Schema)
+	d.Set("hidden", image.Hidden)
 
 	return nil
 }

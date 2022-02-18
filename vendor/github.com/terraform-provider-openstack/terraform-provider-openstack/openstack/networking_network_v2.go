@@ -3,6 +3,9 @@ package openstack
 import (
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/dns"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/external"
@@ -13,20 +16,17 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/vlantransparent"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
 	"github.com/gophercloud/gophercloud/pagination"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 type networkExtended struct {
 	networks.Network
 	external.NetworkExternalExt
 	vlantransparent.TransparentExt
-	provider.NetworkProviderExt
 	portsecurity.PortSecurityExt
 	mtu.NetworkMTUExt
 	dns.NetworkDNSExt
 	policies.QoSPolicyExt
+	provider.NetworkProviderExt
 }
 
 // networkingNetworkV2ID retrieves network ID by the provided name.

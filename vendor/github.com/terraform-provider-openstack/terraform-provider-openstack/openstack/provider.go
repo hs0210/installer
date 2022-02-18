@@ -1,9 +1,13 @@
 package openstack
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/meta"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"context"
+	"os"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/meta"
 
 	"github.com/gophercloud/utils/terraform/auth"
 	"github.com/gophercloud/utils/terraform/mutexkv"
@@ -16,7 +20,7 @@ type Config struct {
 }
 
 // Provider returns a schema.Provider for OpenStack.
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	provider := &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"auth_url": {
@@ -199,7 +203,7 @@ func Provider() terraform.ResourceProvider {
 			"use_octavia": {
 				Type:        schema.TypeBool,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("OS_USE_OCTAVIA", false),
+				DefaultFunc: schema.EnvDefaultFunc("OS_USE_OCTAVIA", true),
 				Description: descriptions["use_octavia"],
 			},
 
@@ -243,6 +247,13 @@ func Provider() terraform.ResourceProvider {
 				Default:     false,
 				Description: descriptions["disable_no_cache_header"],
 			},
+
+			"enable_logging": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Default:     false,
+				Description: descriptions["enable_logging"],
+			},
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{
@@ -251,12 +262,14 @@ func Provider() terraform.ResourceProvider {
 			"openstack_blockstorage_snapshot_v3":                 dataSourceBlockStorageSnapshotV3(),
 			"openstack_blockstorage_volume_v2":                   dataSourceBlockStorageVolumeV2(),
 			"openstack_blockstorage_volume_v3":                   dataSourceBlockStorageVolumeV3(),
+			"openstack_blockstorage_quotaset_v3":                 dataSourceBlockStorageQuotasetV3(),
 			"openstack_compute_aggregate_v2":                     dataSourceComputeAggregateV2(),
 			"openstack_compute_availability_zones_v2":            dataSourceComputeAvailabilityZonesV2(),
 			"openstack_compute_instance_v2":                      dataSourceComputeInstanceV2(),
 			"openstack_compute_flavor_v2":                        dataSourceComputeFlavorV2(),
 			"openstack_compute_hypervisor_v2":                    dataSourceComputeHypervisorV2(),
 			"openstack_compute_keypair_v2":                       dataSourceComputeKeypairV2(),
+			"openstack_compute_quotaset_v2":                      dataSourceComputeQuotasetV2(),
 			"openstack_containerinfra_clustertemplate_v1":        dataSourceContainerInfraClusterTemplateV1(),
 			"openstack_containerinfra_cluster_v1":                dataSourceContainerInfraCluster(),
 			"openstack_dns_zone_v2":                              dataSourceDNSZoneV2(),
@@ -276,6 +289,7 @@ func Provider() terraform.ResourceProvider {
 			"openstack_networking_qos_dscp_marking_rule_v2":      dataSourceNetworkingQoSDSCPMarkingRuleV2(),
 			"openstack_networking_qos_minimum_bandwidth_rule_v2": dataSourceNetworkingQoSMinimumBandwidthRuleV2(),
 			"openstack_networking_qos_policy_v2":                 dataSourceNetworkingQoSPolicyV2(),
+			"openstack_networking_quota_v2":                      dataSourceNetworkingQuotaV2(),
 			"openstack_networking_subnet_v2":                     dataSourceNetworkingSubnetV2(),
 			"openstack_networking_subnet_ids_v2":                 dataSourceNetworkingSubnetIDsV2(),
 			"openstack_networking_secgroup_v2":                   dataSourceNetworkingSecGroupV2(),
@@ -294,6 +308,8 @@ func Provider() terraform.ResourceProvider {
 		},
 
 		ResourcesMap: map[string]*schema.Resource{
+			"openstack_blockstorage_qos_association_v3":          resourceBlockStorageQosAssociationV3(),
+			"openstack_blockstorage_qos_v3":                      resourceBlockStorageQosV3(),
 			"openstack_blockstorage_quotaset_v2":                 resourceBlockStorageQuotasetV2(),
 			"openstack_blockstorage_quotaset_v3":                 resourceBlockStorageQuotasetV3(),
 			"openstack_blockstorage_volume_v1":                   resourceBlockStorageVolumeV1(),
@@ -301,6 +317,8 @@ func Provider() terraform.ResourceProvider {
 			"openstack_blockstorage_volume_v3":                   resourceBlockStorageVolumeV3(),
 			"openstack_blockstorage_volume_attach_v2":            resourceBlockStorageVolumeAttachV2(),
 			"openstack_blockstorage_volume_attach_v3":            resourceBlockStorageVolumeAttachV3(),
+			"openstack_blockstorage_volume_type_access_v3":       resourceBlockstorageVolumeTypeAccessV3(),
+			"openstack_blockstorage_volume_type_v3":              resourceBlockStorageVolumeTypeV3(),
 			"openstack_compute_aggregate_v2":                     resourceComputeAggregateV2(),
 			"openstack_compute_flavor_v2":                        resourceComputeFlavorV2(),
 			"openstack_compute_flavor_access_v2":                 resourceComputeFlavorAccessV2(),
@@ -321,6 +339,8 @@ func Provider() terraform.ResourceProvider {
 			"openstack_db_database_v1":                           resourceDatabaseDatabaseV1(),
 			"openstack_dns_recordset_v2":                         resourceDNSRecordSetV2(),
 			"openstack_dns_zone_v2":                              resourceDNSZoneV2(),
+			"openstack_dns_transfer_request_v2":                  resourceDNSTransferRequestV2(),
+			"openstack_dns_transfer_accept_v2":                   resourceDNSTransferAcceptV2(),
 			"openstack_fw_firewall_v1":                           resourceFWFirewallV1(),
 			"openstack_fw_policy_v1":                             resourceFWPolicyV1(),
 			"openstack_fw_rule_v1":                               resourceFWRuleV1(),
@@ -349,6 +369,7 @@ func Provider() terraform.ResourceProvider {
 			"openstack_lb_monitor_v2":                            resourceMonitorV2(),
 			"openstack_lb_l7policy_v2":                           resourceL7PolicyV2(),
 			"openstack_lb_l7rule_v2":                             resourceL7RuleV2(),
+			"openstack_lb_quota_v2":                              resourceLoadBalancerQuotaV2(),
 			"openstack_networking_floatingip_v2":                 resourceNetworkingFloatingIPV2(),
 			"openstack_networking_floatingip_associate_v2":       resourceNetworkingFloatingIPAssociateV2(),
 			"openstack_networking_network_v2":                    resourceNetworkingNetworkV2(),
@@ -370,6 +391,7 @@ func Provider() terraform.ResourceProvider {
 			"openstack_networking_subnetpool_v2":                 resourceNetworkingSubnetPoolV2(),
 			"openstack_networking_addressscope_v2":               resourceNetworkingAddressScopeV2(),
 			"openstack_networking_trunk_v2":                      resourceNetworkingTrunkV2(),
+			"openstack_networking_portforwarding_v2":             resourceNetworkingPortForwardingV2(),
 			"openstack_objectstorage_container_v1":               resourceObjectStorageContainerV1(),
 			"openstack_objectstorage_object_v1":                  resourceObjectStorageObjectV1(),
 			"openstack_objectstorage_tempurl_v1":                 resourceObjectstorageTempurlV1(),
@@ -389,7 +411,7 @@ func Provider() terraform.ResourceProvider {
 		},
 	}
 
-	provider.ConfigureFunc = func(d *schema.ResourceData) (interface{}, error) {
+	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		terraformVersion := provider.TerraformVersion
 		if terraformVersion == "" {
 			// Terraform 0.12 introduced this field to the protocol
@@ -474,10 +496,22 @@ func init() {
 			"automatically, if the initial auth token get expired. Defaults to `true`",
 
 		"max_retries": "How many times HTTP connection should be retried until giving up.",
+
+		"enable_logging": "Outputs very verbose logs with all calls made to and responses from OpenStack",
 	}
 }
 
-func configureProvider(d *schema.ResourceData, terraformVersion string) (interface{}, error) {
+func configureProvider(d *schema.ResourceData, terraformVersion string) (interface{}, diag.Diagnostics) {
+	enableLogging := d.Get("enable_logging").(bool)
+	if !enableLogging {
+		// enforce logging (similar to OS_DEBUG) when TF_LOG is 'DEBUG' or 'TRACE'
+		if logLevel := logging.LogLevel(); logLevel != "" && os.Getenv("OS_DEBUG") == "" {
+			if logLevel == "DEBUG" || logLevel == "TRACE" {
+				enableLogging = true
+			}
+		}
+	}
+
 	config := Config{
 		auth.Config{
 			CACertFile:                  d.Get("cacert_file").(string),
@@ -513,6 +547,7 @@ func configureProvider(d *schema.ResourceData, terraformVersion string) (interfa
 			TerraformVersion:            terraformVersion,
 			SDKVersion:                  meta.SDKVersionString(),
 			MutexKV:                     mutexkv.NewMutexKV(),
+			EnableLogger:                enableLogging,
 		},
 	}
 
@@ -523,7 +558,7 @@ func configureProvider(d *schema.ResourceData, terraformVersion string) (interfa
 	}
 
 	if err := config.LoadAndValidate(); err != nil {
-		return nil, err
+		return nil, diag.FromErr(err)
 	}
 
 	return &config, nil
