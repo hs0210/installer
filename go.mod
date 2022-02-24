@@ -33,8 +33,8 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.2.0
-	github.com/gophercloud/gophercloud v0.22.0
-	github.com/gophercloud/utils v0.0.0-20210720165645-8a3ad2ad9e70
+	github.com/gophercloud/gophercloud v0.23.0
+	github.com/gophercloud/utils v0.0.0-20210909165623-d7085207ff6d
 	github.com/h2non/filetype v1.0.12
 	github.com/hashicorp/aws-sdk-go-base v0.7.0 // indirect
 	github.com/hashicorp/go-azure-helpers v0.16.5
@@ -42,7 +42,7 @@ require (
 	github.com/hashicorp/go-version v1.3.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/hashicorp/terraform v0.14.6
-	github.com/hashicorp/terraform-plugin-sdk v1.16.0
+	github.com/hashicorp/terraform-plugin-sdk v1.17.2
 	github.com/hashicorp/terraform-provider-google v1.20.1-0.20200922000057-78da461b151a
 	github.com/hashicorp/terraform-provider-vsphere v1.24.3
 	github.com/libvirt/libvirt-go v5.10.0+incompatible
@@ -233,7 +233,7 @@ require (
 	github.com/hashicorp/go-getter v1.5.2 // indirect
 	github.com/hashicorp/go-hclog v0.14.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
-	github.com/hashicorp/go-retryablehttp v0.6.6 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
 	github.com/hashicorp/go-slug v0.4.1 // indirect
 	github.com/hashicorp/go-tfe v0.8.1 // indirect
@@ -355,17 +355,29 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
+require (
+	github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f // indirect
+	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
+	github.com/go-logr/zapr v1.2.0 // indirect
+	go.etcd.io/etcd v0.5.0-alpha.5.0.20200910180754-dd1b699fc489 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/zap v1.19.1 // indirect
+)
+
 replace (
 	cloud.google.com/go => cloud.google.com/go v0.57.0
 	github.com/IBM-Cloud/terraform-provider-ibm => github.com/openshift/terraform-provider-ibm v1.26.2-openshift-2
 	github.com/go-log/log => github.com/go-log/log v0.1.1-0.20181211034820-a514cf01a3eb // Pinned by MCO
-	github.com/gophercloud/gophercloud => github.com/gophercloud/gophercloud v0.17.0
+	github.com/gophercloud/gophercloud => github.com/gophercloud/gophercloud v0.18.0
+	github.com/gophercloud/utils => github.com/gophercloud/utils v0.0.0-20210323225332-7b186010c04f
 	github.com/hashicorp/terraform => github.com/openshift/hashicorp-terraform v0.14.6-openshift-1 // Pin to fork with deduplicated rpc types v0.14.6-openshift-1
 	github.com/hashicorp/terraform-plugin-sdk => github.com/openshift/hashicorp-terraform-plugin-sdk v1.16.0-openshift // Pin to fork with public rpc types
 	github.com/hashicorp/terraform-provider-vsphere => github.com/openshift/terraform-provider-vsphere v1.24.3-openshift
 	github.com/metal3-io/baremetal-operator => github.com/openshift/baremetal-operator v0.0.0-20220128094204-28771f489634 // Use OpenShift fork
 	github.com/metal3-io/baremetal-operator/apis => github.com/openshift/baremetal-operator/apis v0.0.0-20220128094204-28771f489634 // Use OpenShift fork
 	github.com/metal3-io/baremetal-operator/pkg/hardwareutils => github.com/openshift/baremetal-operator/pkg/hardwareutils v0.0.0-20220128094204-28771f489634 // Use OpenShift fork
+	github.com/openshift-metal3/terraform-provider-ironic => github.com/hs0210/terraform-provider-ironic v0.4.6
 	github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3 // Pin client-go
 	github.com/openshift/machine-config-operator => github.com/openshift/machine-config-operator v0.0.1-0.20201009041932-4fe8559913b8 // Pin MCO so it doesn't get downgraded
 	github.com/spf13/afero => github.com/spf13/afero v1.2.2
