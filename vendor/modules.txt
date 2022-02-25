@@ -1675,7 +1675,7 @@ github.com/opencontainers/go-digest
 ## explicit
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/openshift-metal3/terraform-provider-ironic v0.2.7 => github.com/hs0210/terraform-provider-ironic v0.4.7
+# github.com/openshift-metal3/terraform-provider-ironic v0.2.7 => github.com/hs0210/terraform-provider-ironic v0.4.8
 ## explicit; go 1.16
 github.com/openshift-metal3/terraform-provider-ironic/ironic
 # github.com/openshift/api v0.0.0-20220124143425-d74727069f6f
@@ -3149,7 +3149,7 @@ sigs.k8s.io/yaml
 # github.com/metal3-io/baremetal-operator => github.com/openshift/baremetal-operator v0.0.0-20220128094204-28771f489634
 # github.com/metal3-io/baremetal-operator/apis => github.com/openshift/baremetal-operator/apis v0.0.0-20220128094204-28771f489634
 # github.com/metal3-io/baremetal-operator/pkg/hardwareutils => github.com/openshift/baremetal-operator/pkg/hardwareutils v0.0.0-20220128094204-28771f489634
-# github.com/openshift-metal3/terraform-provider-ironic => github.com/hs0210/terraform-provider-ironic v0.4.7
+# github.com/openshift-metal3/terraform-provider-ironic => github.com/hs0210/terraform-provider-ironic v0.4.8
 # github.com/openshift/client-go => github.com/openshift/client-go v0.0.0-20211209144617-7385dd6338e3
 # github.com/openshift/machine-config-operator => github.com/openshift/machine-config-operator v0.0.1-0.20201009041932-4fe8559913b8
 # github.com/spf13/afero => github.com/spf13/afero v1.2.2
