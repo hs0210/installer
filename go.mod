@@ -374,7 +374,7 @@ replace (
 	github.com/hashicorp/terraform => github.com/openshift/hashicorp-terraform v0.14.6-openshift-1 // Pin to fork with deduplicated rpc types v0.14.6-openshift-1
 	github.com/hashicorp/terraform-plugin-sdk => github.com/openshift/hashicorp-terraform-plugin-sdk v1.16.0-openshift // Pin to fork with public rpc types
 	github.com/hashicorp/terraform-provider-vsphere => github.com/openshift/terraform-provider-vsphere v1.24.3-openshift
-	github.com/metal3-io/baremetal-operator => github.com/openshift/baremetal-operator v0.0.0-20220128094204-28771f489634 // Use OpenShift fork
+	github.com/metal3-io/baremetal-operator => github.com/openshift/baremetal-operator v0.0.0-20211201170610-92ffa60c683d // Use OpenShift fork
 	github.com/metal3-io/baremetal-operator/apis => github.com/openshift/baremetal-operator/apis v0.0.0-20220128094204-28771f489634 // Use OpenShift fork
 	github.com/metal3-io/baremetal-operator/pkg/hardwareutils => github.com/openshift/baremetal-operator/pkg/hardwareutils v0.0.0-20220128094204-28771f489634 // Use OpenShift fork
 	github.com/openshift-metal3/terraform-provider-ironic => github.com/hs0210/terraform-provider-ironic v0.4.6
